@@ -1,3 +1,8 @@
+![AWS](https://img.shields.io/badge/AWS-232F3E?style=flat&logo=amazonaws&logoColor=white)
+![Python](https://img.shields.io/badge/-Python-3776AB?logo=python&logoColor=white&style=flat)
+![Generative AI](https://img.shields.io/badge/Generative%20AI-E75480?style=flat&logo=ai&logoColor=white)
+![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=flat&logo=html5&logoColor=white)
+
 # EduUML Diagram Generator
 
 Aplicación web para generar diagramas UML automáticamente desde repositorios locales o tomando una url de GitHub.
@@ -8,7 +13,7 @@ El backend donde se modifica la logica de la generación es una aws lambda y se 
 
 ⭐Una vez generador la codificacion de UML se puede modificar el diagrama en su herramienta correspondiente.
 
-![](resources/uml-diagram-generator.png)
+![](resources/UML-Diagram-Generator.png)
 
 
 ## 🏗️ Arquitectura
