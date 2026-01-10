@@ -256,6 +256,11 @@ Si queremos modificar los prompts en ..backend/src/prompts.py tener en cuenta qu
    "codigoUML": "código {format_diagram} aquí"
 }
 
+## Documentacion
+- [Documentación de AWS SAM](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/what-is-sam.html)
+- [Documentación de Google Gemini](https://developers.generativeai.google/products/gemini/)
+
+
 ## Desarrollos Futuros
 
 - Integración con más LLMs
