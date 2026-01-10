@@ -1,0 +1,26 @@
+version = 0.1
+
+[default]
+[default.build]
+[default.build.parameters]
+cached = false
+parallel = true
+
+[default.deploy]
+[default.deploy.parameters]
+template_file = "template-prod.yaml"
+stack_name = "uml-generator-stack"
+confirm_changeset = true
+capabilities = "CAPABILITY_IAM"
+image_repositories = []
+
+[default.local_start_api]
+[default.local_start_api.parameters]
+warm_containers = "EAGER"
+
+[default.local_invoke]
+[default.local_invoke.parameters]
+warm_containers = "EAGER"
+
+
+

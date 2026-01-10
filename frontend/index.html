@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UML Diagram Generator</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>📚 EduUML Diagram Generator</h1>
+            <p>Genera diagramas UML desde tu código fuente usando AI</p>
+        </header>
+
+        <main class="main-content">
+            <!-- Configuration Panel -->
+            <section class="config-panel">
+                <h2>Configuración</h2>
+                
+                <!-- Source Selection Toggle -->
+                <div class="form-group">
+                    <label>📂 Selecciona origen del código fuente:</label>
+                    <div class="radio-group-inline">
+                        <label class="radio-inline">
+                            <input type="radio" name="source-type" value="local" checked>
+                            <span>Directorio Local</span>
+                        </label>
+                        <label class="radio-inline">
+                            <input type="radio" name="source-type" value="github">
+                            <span>Repositorio GitHub</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Directory Selection -->
+                <div id="local-source-section" class="form-group">
+                    <label for="directory-input">📁 Directorio de código fuente:</label>
+                    <div class="directory-selector">
+                        <input type="file" id="directory-input" webkitdirectory multiple style="display: none;">
+                        <button id="select-directory-btn" class="btn btn-secondary">
+                            Seleccionar Directorio
+                        </button>
+                        <span id="selected-directory" class="selected-path">Ningún directorio seleccionado</span>
+                    </div>
+                    <div id="directory-info" class="directory-info" style="display: none;">
+                        <small id="files-count">0 archivos encontrados</small>
+                    </div>
+                </div>
+
+                <!-- GitHub Repository URL -->
+                <div id="github-source-section" class="form-group" style="display: none;">
+                    <label for="github-url-input">🔗 Repositorio de GitHub:</label>
+                    <div class="github-input-group">
+                        <input type="url" id="github-url-input" class="select-input" placeholder="https://github.com/usuario/repositorio">
+                    </div>
+                    <small id="github-info" style="color: #718096; display: block; margin-top: 6px;">Ingresa la URL de tu repositorio de GitHub</small>
+                </div>
+
+                <!-- Analysis Method -->
+                <div class="form-group">
+                    <label>🤖 Método de análisis:</label>
+                    <div class="radio-group">
+                        <label class="radio-option">
+                            <input type="radio" name="analysis-method" value="llm_direct" checked>
+                            <span class="radio-label">
+                                <strong>AI Analysis (Gemini)</strong>
+                                <small>Análisis inteligente directo con LLM</small>
+                            </span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Output Format -->
+                <div class="form-group">
+                    <label for="output-format">📊 Formato de salida:</label>
+                    <select id="output-format" class="select-input">
+                        <option value="drawio">Draw.io (XML)</option>
+                        <option value="plantuml">PlantUML</option>
+                        <option value="mermaid">Mermaid</option> 
+                    </select>
+                </div>
+
+                <!-- Diagram Type -->
+                <div class="form-group">
+                    <label for="diagram-type">📋 Tipo de diagrama:</label>
+                    <select id="diagram-type" class="select-input">
+                        <option value="class">Diagrama de Clases</option>
+                        <option value="sequence">Diagrama de Secuencia</option>
+                        <option value="use_case">Diagrama de Casos de Uso</option>
+                        <option value="activity">Diagrama de Actividad</option>
+                        <option value="component">Diagrama de Componentes</option>
+                        <option value="deployment">Diagrama de Despliegue</option>
+                        <option value="state">Diagrama de Estados</option>
+                    </select>
+                </div>
+
+                <!-- Generate Button -->
+                <div class="form-group">
+                    <button id="generate-btn" class="btn btn-primary" disabled>
+                        <span id="generate-text">🌟 Generar Diagrama</span>
+                        <span id="loading-spinner" class="spinner" style="display: none;">⏳</span>
+                    </button>
+                </div>
+            </section>
+
+            <!-- Initial welcome / empty viewport shown when there is no result -->
+            <section id="initial-viewport" class="initial-viewport">
+                <div class="welcome-hero">
+                    <div class="welcome-content">
+                        <h2>Carga tu proyecto para empezar</h2>
+                        <p>EduUML utiliza IA avanzada para entender la lógica de tu código y transformarla en representaciones visuales claras y educativas.</p>
+
+                        <ul class="feature-list">
+                            <li>✨ Generación instantánea de diagramas</li>
+                            <li>📚 Explicaciones técnicas detalladas</li>
+                            <li>📂 Soporte para múltiples lenguajes</li>
+                            <li>🛠️ Exportación a PlantUML y Mermaid</li>
+                        </ul>
+                    </div>
+
+                    <div class="welcome-art">
+                        <div class="art-inner">
+                            <img src="recursos/fondouml.svg" alt="Decorative diagram" />
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Results Panel -->
+            <section class="results-panel" id="results-panel" style="display: none;">
+                <h2>Resultado</h2>
+                
+                <!-- Tabs for different views -->
+                <div class="tabs">
+                    <button class="tab-btn active" data-tab="viewer">👁️ Vista Previa</button>
+                    <button class="tab-btn" data-tab="code">📝 Código</button>
+                    <button class="tab-btn" data-tab="metadata">ℹ️ Información</button>
+                </div>
+
+                <!-- Diagram Viewer -->
+                <div id="viewer-tab" class="tab-content active">
+                    <div class="viewer-container">
+                        <div id="mermaid-viewer" class="diagram-viewer" style="display: none;">
+                            <div id="mermaid-diagram"></div>
+                        </div>
+                        <div id="plantuml-viewer" class="diagram-viewer" style="display: none;">
+                            <!-- El contenido se genera dinámicamente con iframe -->
+                        </div>
+                        <div id="drawio-viewer" class="diagram-viewer" style="display: none;">
+                            <!-- El contenido se genera dinámicamente: iframe para vista previa o textarea para código -->
+                            <textarea id="drawio-code" readonly style="display: none;"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Code View -->
+                <div id="code-tab" class="tab-content">
+                    <div class="code-container">
+                        <div class="code-header">
+                            <button id="copy-code-btn" class="btn btn-small">📋 Copiar</button>
+                            <button id="download-code-btn" class="btn btn-small">💾 Descargar</button>
+                        </div>
+                        <pre id="diagram-code"></pre>
+                    </div>
+                </div>
+
+                <!-- Metadata View -->
+                <div id="metadata-tab" class="tab-content">
+                    <div id="metadata-content"></div>
+                </div>
+            </section>
+
+            <!-- Error Panel -->
+            <section class="error-panel" id="error-panel" style="display: none;">
+                <h3>❌ Error</h3>
+                <p id="error-message"></p>
+                <button id="dismiss-error-btn" class="btn btn-secondary">Cerrar</button>
+            </section>
+        </main>
+
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/fileHandler.js"></script>
+    <script src="js/apiClient.js"></script>
+    <script src="js/diagramRenderer.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>

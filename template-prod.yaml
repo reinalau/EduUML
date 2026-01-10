@@ -1,0 +1,74 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: UML Diagram Generator API (Production - AWS Deployment)
+
+Globals:
+  Function:
+    Timeout: 300  # 3 minutos para Lambda
+    MemorySize: 1024
+    Runtime: python3.12
+    Environment:
+      Variables:
+        GOOGLE_API_KEY: !Ref GoogleApiKey
+        GEMINI_MODEL_NAME: !Ref GeminiModelName
+
+Parameters:
+  GoogleApiKey:
+    Type: String
+    Description: Google Gemini API Key
+    NoEcho: true
+    Default: "dummyApikey"
+      
+  GeminiModelName:
+    Type: String
+    Description: Gemini model name
+    Default: "gemini-2.5-flash"
+
+Resources:
+  # Lambda Layer for dependencies
+  DependenciesLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: uml-generator-dependencies
+      Description: Dependencies for UML Generator
+      ContentUri: layers/dependencies/
+      CompatibleRuntimes:
+        - python3.12
+      RetentionPolicy: Delete
+    Metadata:
+      BuildMethod: python3.12
+
+  # Main Lambda Function with Function URL
+  UMLGeneratorFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: uml-diagram-generator
+      CodeUri: backend/
+      Handler: src.handlers.main_handler.lambda_handler
+      Layers:
+        - !Ref DependenciesLayer
+      FunctionUrlConfig:
+        AuthType: NONE
+        #Cors: #ya lo tiene el codigo python
+        #  AllowCredentials: false
+        #  AllowHeaders:
+        #    - "Content-Type"
+        #    - "X-Amz-Date"
+        #    - "Authorization"
+        #  AllowMethods:
+        #    - "POST"
+        #  AllowOrigins:
+        #    - "*"
+        #  MaxAge: 86400
+      Environment:
+        Variables:
+          PYTHONPATH: /opt/python:/var/runtime:/var/task
+          GOOGLE_API_KEY: !Ref GoogleApiKey
+          GEMINI_MODEL_NAME: !Ref GeminiModelName
+
+Outputs:
+  UMLGeneratorFunctionArn:
+    Description: "UML Generator Lambda Function ARN"
+    Value: !GetAtt UMLGeneratorFunction.Arn
+    Export:
+      Name: UMLGeneratorFunctionArn

@@ -1,0 +1,89 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: UML Diagram Generator API (Local Development)
+
+Globals:
+  Function:
+    Timeout: 180  # 3 minutos para Lambda
+    MemorySize: 1024
+    Runtime: python3.12
+    Environment:
+      Variables:
+        GOOGLE_API_KEY: !Ref GoogleApiKey
+        GEMINI_MODEL_NAME: !Ref GeminiModelName
+
+Parameters:
+  GoogleApiKey:
+    Type: String
+    Description: Google Gemini API Key
+    NoEcho: true
+    Default: "XXXXXX"
+  
+  GeminiModelName:
+    Type: String
+    Description: Gemini model name
+    Default: "gemini-2.5-flash"
+
+Resources:
+  # Lambda Layer for dependencies
+  DependenciesLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: uml-generator-dependencies
+      Description: Dependencies for UML Generator
+      ContentUri: layers/dependencies/
+      CompatibleRuntimes:
+        - python3.12
+      RetentionPolicy: Delete
+    Metadata:
+      BuildMethod: python3.12
+
+  # HTTP API for local development
+  DiagramGeneratorApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      Name: uml-diagram-api
+      CorsConfiguration:
+        AllowCredentials: false
+        AllowHeaders:
+          - "Content-Type"
+          - "X-Amz-Date"
+          - "Authorization"
+        AllowMethods:
+          - "POST"
+          - "OPTIONS"
+          - "GET"
+        AllowOrigins:
+          - "*"
+        MaxAge: 86400
+
+  # Main Lambda Function
+  UMLGeneratorFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: uml-diagram-generator
+      CodeUri: backend/
+      Handler: src.handlers.main_handler.lambda_handler
+      Layers:
+        - !Ref DependenciesLayer
+      Environment:
+        Variables:
+          PYTHONPATH: /opt/python:/var/runtime:/var/task
+          GOOGLE_API_KEY: !Ref GoogleApiKey
+          GEMINI_MODEL_NAME: !Ref GeminiModelName
+      Events:
+        GenerateDiagram:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref DiagramGeneratorApi
+            Path: /generate-diagram
+            Method: POST
+
+Outputs:
+  DiagramGeneratorApiEndpoint:
+    Description: "HTTP API endpoint for UML Generator (local development)"
+    Value: !Sub "http://localhost:3000/generate-diagram"
+  
+  UMLGeneratorFunctionArn:
+    Description: "UML Generator Lambda Function ARN"
+    Value: !GetAtt UMLGeneratorFunction.Arn

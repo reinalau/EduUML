@@ -1,0 +1,7 @@
+backend_env/
+__pycache__/
+.pytest_cache/
+*.pyc
+.env
+tests/
+.vscode/
