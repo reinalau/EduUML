@@ -239,7 +239,7 @@ Eliminar bucket de S3
 
 ```bash
 
-aws s3 rm s3://<nombre-del-bucket>/ --recursive
+aws s3 rb s3://<nombre-del-bucket> --force
 ```
 
 Eliminar cloudwatch de las ejecuciones. Es importante saber que los grupos de logs de cloudwatch no se eliminan con sam delete.
